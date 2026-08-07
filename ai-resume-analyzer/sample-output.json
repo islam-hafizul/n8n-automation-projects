@@ -1,0 +1,102 @@
+{
+    "candidate_name": "Harshibar",
+    "overall_score": 73,
+    "ats_score": 70,
+    "score_breakdown": {
+        "summary": 5,
+        "experience": 8,
+        "skills": 7,
+        "projects": 8,
+        "education": 9,
+        "formatting": 6,
+        "ats": 7
+    },
+    "skills": {
+        "technical": [
+            "Python",
+            "JavaScript (React.js)",
+            "HTML/CSS",
+            "SQL (PostgreSQL, MySQL)",
+            "Figma",
+            "Notion",
+            "Jira",
+            "Trello",
+            "Miro",
+            "Google Analytics",
+            "GitHub",
+            "DaVinci Resolve",
+            "OBS"
+        ],
+        "soft": [
+            "Communication",
+            "Problem-solving",
+            "Collaboration"
+        ]
+    },
+    "strengths": [
+        "Strong experience in software engineering with measurable impacts.",
+        "Well-defined projects showcasing a variety of skills and tools used.",
+        "Demonstrated ability to grow a platform significantly."
+    ],
+    "weaknesses": [
+        "No direct experience with Node.js or Vue.js as explicitly requested in the job description.",
+        "Lacks experience in Adobe ColdFusion and legacy system modernization.",
+        "Limited focus on backend development in the recent role."
+    ],
+    "recommendations": [
+        "Highlight any personal or academic projects involving Node.js or Vue.js, if applicable.",
+        "Consider gaining experience or familiarity with Adobe ColdFusion to align with job requirements.",
+        "Emphasize any third-party API interactions or data management experiences."
+    ],
+    "job_match": {
+        "match_score": 56,
+        "score_breakdown": {
+            "skills": 5,
+            "experience": 6,
+            "keywords": 5,
+            "projects": 7
+        },
+        "required_skills": [
+            "Node.js",
+            "Vue.js",
+            "relational databases",
+            "Git"
+        ],
+        "preferred_skills": [
+            "ColdFusion",
+            "Docker",
+            "AWS",
+            "Nginx",
+            "monitoring/logging tools"
+        ],
+        "matched_skills": [],
+        "missing_required_skills": [
+            "Node.js",
+            "Vue.js"
+        ],
+        "missing_preferred_skills": [
+            "ColdFusion",
+            "Docker",
+            "AWS",
+            "Nginx"
+        ],
+        "matched_keywords": [
+            "JavaScript",
+            "web development",
+            "APIs",
+            "database",
+            "Git"
+        ],
+        "missing_keywords": [
+            "Node.js",
+            "Vue.js",
+            "ColdFusion",
+            "legacy"
+        ],
+        "recommendations": [
+            "Focus on any relevant coursework or projects involving Node.js and Vue.js.",
+            "Explore online tutorials or workshops on Node.js and Vue.js to enhance skills."
+        ]
+    },
+    "report_html": "\n<!DOCTYPE html>\n<html>\n<head>\n<meta charset=\"UTF-8\">\n\n<title>AI Resume Analysis - Harshibar</title>\n\n<style>\n\nbody {\n  font-family: Arial, sans-serif;\n  background: #f4f6f8;\n  margin: 0;\n  padding: 40px;\n  color: #222;\n}\n\n.container {\n  max-width: 1000px;\n  margin: auto;\n  background: white;\n  padding: 40px;\n  border-radius: 12px;\n}\n\nh1 {\n  margin-bottom: 5px;\n}\n\nh2 {\n  margin-top: 35px;\n  border-bottom: 1px solid #ddd;\n  padding-bottom: 8px;\n}\n\n.subtitle {\n  color: #666;\n}\n\n.scores {\n  display: flex;\n  gap: 20px;\n  margin: 30px 0;\n}\n\n.score-card {\n  flex: 1;\n  padding: 20px;\n  background: #f5f7fa;\n  border-radius: 10px;\n  text-align: center;\n}\n\n.score {\n  font-size: 36px;\n  font-weight: bold;\n}\n\n.tags {\n  margin-top: 10px;\n}\n\n.tag {\n  display: inline-block;\n  padding: 6px 10px;\n  margin: 4px;\n  border-radius: 6px;\n  background: #e9eef5;\n  font-size: 14px;\n}\n\n.matched {\n  background: #dff5e3;\n}\n\n.missing {\n  background: #fde2e2;\n}\n\nli {\n  margin-bottom: 8px;\n}\n\ntable {\n  width: 100%;\n  border-collapse: collapse;\n}\n\ntd, th {\n  padding: 10px;\n  border-bottom: 1px solid #ddd;\n  text-align: left;\n}\n\n</style>\n\n</head>\n\n<body>\n\n<div class=\"container\">\n\n<h1>AI Resume Analysis</h1>\n\n<div class=\"subtitle\">\nCandidate: Harshibar\n</div>\n\n<div class=\"scores\">\n\n<div class=\"score-card\">\n<div>Overall Score</div>\n<div class=\"score\">73/100</div>\n</div>\n\n<div class=\"score-card\">\n<div>ATS Score</div>\n<div class=\"score\">70/100</div>\n</div>\n\n<div class=\"score-card\">\n<div>Job Match</div>\n<div class=\"score\">56/100</div>\n</div>\n\n</div>\n\n<h2>Score Breakdown</h2>\n\n<table>\n\n<tr>\n<th>Category</th>\n<th>Score</th>\n</tr>\n\n<tr>\n<td>Summary</td>\n<td>5/10</td>\n</tr>\n\n<tr>\n<td>Experience</td>\n<td>8/10</td>\n</tr>\n\n<tr>\n<td>Skills</td>\n<td>7/10</td>\n</tr>\n\n<tr>\n<td>Projects</td>\n<td>8/10</td>\n</tr>\n\n<tr>\n<td>Education</td>\n<td>9/10</td>\n</tr>\n\n<tr>\n<td>Formatting</td>\n<td>6/10</td>\n</tr>\n\n<tr>\n<td>ATS</td>\n<td>7/10</td>\n</tr>\n\n</table>\n\n<h2>Technical Skills</h2>\n\n<div class=\"tags\">\n<span class=\"tag\">Python</span><span class=\"tag\">JavaScript (React.js)</span><span class=\"tag\">HTML/CSS</span><span class=\"tag\">SQL (PostgreSQL, MySQL)</span><span class=\"tag\">Figma</span><span class=\"tag\">Notion</span><span class=\"tag\">Jira</span><span class=\"tag\">Trello</span><span class=\"tag\">Miro</span><span class=\"tag\">Google Analytics</span><span class=\"tag\">GitHub</span><span class=\"tag\">DaVinci Resolve</span><span class=\"tag\">OBS</span>\n</div>\n\n<h2>Soft Skills</h2>\n\n<div class=\"tags\">\n<span class=\"tag\">Communication</span><span class=\"tag\">Problem-solving</span><span class=\"tag\">Collaboration</span>\n</div>\n\n<h2>Strengths</h2>\n\n<ul>\n<li>Strong experience in software engineering with measurable impacts.</li><li>Well-defined projects showcasing a variety of skills and tools used.</li><li>Demonstrated ability to grow a platform significantly.</li>\n</ul>\n\n<h2>Areas for Improvement</h2>\n\n<ul>\n<li>No direct experience with Node.js or Vue.js as explicitly requested in the job description.</li><li>Lacks experience in Adobe ColdFusion and legacy system modernization.</li><li>Limited focus on backend development in the recent role.</li>\n</ul>\n\n<h2>Recommendations</h2>\n\n<ul>\n<li>Highlight any personal or academic projects involving Node.js or Vue.js, if applicable.</li><li>Consider gaining experience or familiarity with Adobe ColdFusion to align with job requirements.</li><li>Emphasize any third-party API interactions or data management experiences.</li>\n</ul>\n\n<h2>Job Match Analysis</h2>\n\n<h3>Match Score: 56/100</h3>\n\n<h3>Required Skills</h3>\n\n<div class=\"tags\">\n<span class=\"tag\">Node.js</span><span class=\"tag\">Vue.js</span><span class=\"tag\">relational databases</span><span class=\"tag\">Git</span>\n</div>\n\n<h3>Preferred Skills</h3>\n\n<div class=\"tags\">\n<span class=\"tag\">ColdFusion</span><span class=\"tag\">Docker</span><span class=\"tag\">AWS</span><span class=\"tag\">Nginx</span><span class=\"tag\">monitoring/logging tools</span>\n</div>\n\n<h3>Matched Skills</h3>\n\n<div class=\"tags\">\nNone\n</div>\n\n<h3>Missing Required Skills</h3>\n\n<div class=\"tags\">\n<span class=\"tag missing\">Node.js</span><span class=\"tag missing\">Vue.js</span>\n</div>\n\n<h3>Missing Preferred Skills</h3>\n\n<div class=\"tags\">\n<span class=\"tag missing\">ColdFusion</span><span class=\"tag missing\">Docker</span><span class=\"tag missing\">AWS</span><span class=\"tag missing\">Nginx</span>\n</div>\n\n<h3>Matched Keywords</h3>\n\n<div class=\"tags\">\n<span class=\"tag matched\">JavaScript</span><span class=\"tag matched\">web development</span><span class=\"tag matched\">APIs</span><span class=\"tag matched\">database</span><span class=\"tag matched\">Git</span>\n</div>\n\n<h3>Missing Keywords</h3>\n\n<div class=\"tags\">\n<span class=\"tag missing\">Node.js</span><span class=\"tag missing\">Vue.js</span><span class=\"tag missing\">ColdFusion</span><span class=\"tag missing\">legacy</span>\n</div>\n\n<h3>Job-Specific Recommendations</h3>\n\n<ul>\n<li>Focus on any relevant coursework or projects involving Node.js and Vue.js.</li><li>Explore online tutorials or workshops on Node.js and Vue.js to enhance skills.</li>\n</ul>\n\n</div>\n\n</body>\n</html>\n"
+}

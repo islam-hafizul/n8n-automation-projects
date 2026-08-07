@@ -1,0 +1,16 @@
+.env
+.env.*
+*.key
+*.pem
+credentials.json
+
+node_modules/
+
+.DS_Store
+
+# Local n8n data
+.n8n/
+
+# Personal test files
+test-resumes/
+private/

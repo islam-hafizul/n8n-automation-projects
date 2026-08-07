@@ -1,0 +1,238 @@
+{
+  "name": "AI Resume Analyzer",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "resume-analyzer",
+        "responseMode": "responseNode",
+        "options": {
+          "binaryPropertyName": "=resume"
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "4d3be2b7-d46c-49c4-a150-86ec63b66de6",
+      "name": "Webhook",
+      "webhookId": "069c5721-92be-4eb6-baf3-5516dfdb24de"
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "binaryPropertyName": "resume0",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        224,
+        0
+      ],
+      "id": "5b515e58-e590-4dd3-a61d-6876d3d6b03f",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "=You are an expert resume reviewer and ATS analyst.\n\nAnalyze the resume provided below.\n\nIMPORTANT:\nThe automation has already determined whether a job description was provided.\n\nJOB DESCRIPTION PROVIDED:\n{{ $json.has_job_description }}\n\nDo not decide whether a job description exists yourself.\n\n---\n\nRESUME ANALYSIS\n\nEvaluate the resume objectively.\n\nScore each category from 0 to 10:\n\n1. SUMMARY\nEvaluate clarity, professionalism, relevance, and ability to communicate the candidate's value.\n\n2. EXPERIENCE\nEvaluate relevance, responsibilities, achievements, measurable results, and career progression.\n\n3. SKILLS\nEvaluate relevance, organization, technical depth, and evidence supporting the skills.\n\n4. PROJECTS\nEvaluate relevance, technical depth, technologies, problem-solving, and outcomes.\n\n5. EDUCATION\nEvaluate clarity, degree information, relevant coursework, research, and academic achievements.\n\n6. FORMATTING\nEvaluate organization, consistency, readability, section structure, and professional presentation based on the extracted text.\n\n7. ATS\nEvaluate standard resume sections, keywords, contact information, skill clarity, experience readability, consistency, and ATS-friendly structure.\n\nAll resume scores must be between 0 and 10.\n\n---\n\nJOB MATCHING\n\nOnly perform this section when:\n\nJOB DESCRIPTION PROVIDED = true\n\nWhen it is true, compare the resume against the job description.\n\nFirst identify important requirements from the job description.\n\nClassify skills into:\n\nREQUIRED SKILLS:\nSkills explicitly required or strongly indicated as necessary.\n\nPREFERRED SKILLS:\nSkills described as preferred, desirable, nice-to-have, bonus, or equivalent.\n\nMATCHING RULES:\n\n1. A skill is matched only when the resume explicitly demonstrates or lists that skill.\n\n2. Do not assume equivalent skills.\n\nExamples:\nReact does not automatically mean Angular.\nPython does not automatically mean Java.\nGit does not automatically mean GitHub Actions.\n\n3. Never invent skills or experience.\n\n4. If a required skill is absent from the resume, put it in missing_required_skills.\n\n5. If a preferred skill is absent from the resume, put it in missing_preferred_skills.\n\n6. matched_keywords should contain important job-related terms that appear in both the job description and resume.\n\n7. missing_keywords should contain important job-related terms from the job description that are absent from the resume.\n\n8. Do not include generic words such as:\nteam\nwork\ncompany\ncandidate\nexperience\njob\n\n9. Recommendations must be based on genuine gaps between the resume and job description.\n\n10. Never recommend adding a skill merely because it appears in the job description.\n\n11. Only recommend highlighting a skill when the resume provides evidence that the candidate actually possesses it.\n\nJOB MATCH SCORES\n\nWhen JOB DESCRIPTION PROVIDED = true, score:\n\nskills: 0-10\nexperience: 0-10\nkeywords: 0-10\nprojects: 0-10\n\nDo not calculate the final job match score.\n\n---\n\nWHEN JOB DESCRIPTION IS NOT PROVIDED\n\nWhen:\n\nJOB DESCRIPTION PROVIDED = false\n\nReturn:\n\njob_match.scores:\n- skills = 0\n- experience = 0\n- keywords = 0\n- projects = 0\n\nAll job_match arrays must be empty.\n\nDo not generate job-specific recommendations.\n\n---\n\nCANDIDATE NAME\n\nExtract the candidate's name from the resume's contact/header section.\n\nDo not use a name from the job description.\n\nIf the name cannot be confidently identified, return an empty string.\n\n---\n\nRESUME:\n\n{{ $json.text }}\n\n---\n\nJOB DESCRIPTION:\n\n{{ $json.job_description }}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {
+          "textFormat": {
+            "textOptions": {
+              "type": "json_schema",
+              "schema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"candidate_name\": {\n      \"type\": \"string\"\n    },\n    \"scores\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"summary\": {\n          \"type\": \"number\"\n        },\n        \"experience\": {\n          \"type\": \"number\"\n        },\n        \"skills\": {\n          \"type\": \"number\"\n        },\n        \"projects\": {\n          \"type\": \"number\"\n        },\n        \"education\": {\n          \"type\": \"number\"\n        },\n        \"formatting\": {\n          \"type\": \"number\"\n        },\n        \"ats\": {\n          \"type\": \"number\"\n        }\n      },\n      \"required\": [\n        \"summary\",\n        \"experience\",\n        \"skills\",\n        \"projects\",\n        \"education\",\n        \"formatting\",\n        \"ats\"\n      ],\n      \"additionalProperties\": false\n    },\n    \"skills\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"technical\": {\n          \"type\": \"array\",\n          \"items\": {\n            \"type\": \"string\"\n          }\n        },\n        \"soft\": {\n          \"type\": \"array\",\n          \"items\": {\n            \"type\": \"string\"\n          }\n        }\n      },\n      \"required\": [\n        \"technical\",\n        \"soft\"\n      ],\n      \"additionalProperties\": false\n    },\n    \"strengths\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"string\"\n      }\n    },\n    \"weaknesses\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"string\"\n      }\n    },\n    \"recommendations\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"string\"\n      }\n    },\n    \"job_match\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"scores\": {\n          \"type\": \"object\",\n          \"properties\": {\n            \"skills\": {\n              \"type\": \"number\"\n            },\n            \"experience\": {\n              \"type\": \"number\"\n            },\n            \"keywords\": {\n              \"type\": \"number\"\n            },\n            \"projects\": {\n              \"type\": \"number\"\n            }\n          },\n          \"required\": [\n            \"skills\",\n            \"experience\",\n            \"keywords\",\n            \"projects\"\n          ],\n          \"additionalProperties\": false\n        },\n        \"required_skills\": {\n          \"type\": \"array\",\n          \"items\": {\n            \"type\": \"string\"\n          }\n        },\n        \"preferred_skills\": {\n          \"type\": \"array\",\n          \"items\": {\n            \"type\": \"string\"\n          }\n        },\n        \"matched_skills\": {\n          \"type\": \"array\",\n          \"items\": {\n            \"type\": \"string\"\n          }\n        },\n        \"missing_required_skills\": {\n          \"type\": \"array\",\n          \"items\": {\n            \"type\": \"string\"\n          }\n        },\n        \"missing_preferred_skills\": {\n          \"type\": \"array\",\n          \"items\": {\n            \"type\": \"string\"\n          }\n        },\n        \"matched_keywords\": {\n          \"type\": \"array\",\n          \"items\": {\n            \"type\": \"string\"\n          }\n        },\n        \"missing_keywords\": {\n          \"type\": \"array\",\n          \"items\": {\n            \"type\": \"string\"\n          }\n        },\n        \"recommendations\": {\n          \"type\": \"array\",\n          \"items\": {\n            \"type\": \"string\"\n          }\n        }\n      },\n      \"required\": [\n        \"scores\",\n        \"required_skills\",\n        \"preferred_skills\",\n        \"matched_skills\",\n        \"missing_required_skills\",\n        \"missing_preferred_skills\",\n        \"matched_keywords\",\n        \"missing_keywords\",\n        \"recommendations\"\n      ],\n      \"additionalProperties\": false\n    }\n  },\n  \"required\": [\n    \"candidate_name\",\n    \"scores\",\n    \"skills\",\n    \"strengths\",\n    \"weaknesses\",\n    \"recommendations\",\n    \"job_match\"\n  ],\n  \"additionalProperties\": false\n}"
+            }
+          }
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        672,
+        0
+      ],
+      "id": "af029e79-4972-4fb7-8c89-c27cf33d6385",
+      "name": "Message a model",
+      "credentials": {
+        "openAiApi": {
+          "id": "",
+          "name": ""
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const aiOutput = $json.output[0].content[0].text;\n\nconst resumeScores = aiOutput.scores;\nconst jobMatch = aiOutput.job_match;\n\n// Resume overall score\nconst overallScore = Math.round(\n  (\n    resumeScores.summary * 0.10 +\n    resumeScores.experience * 0.25 +\n    resumeScores.skills * 0.15 +\n    resumeScores.projects * 0.15 +\n    resumeScores.education * 0.10 +\n    resumeScores.formatting * 0.10 +\n    resumeScores.ats * 0.15\n  ) * 10\n);\n\n// ATS score\nconst atsScore = resumeScores.ats * 10;\n\n// Job match score\nconst jobMatchScore = Math.round(\n  (\n    jobMatch.scores.skills * 0.35 +\n    jobMatch.scores.experience * 0.30 +\n    jobMatch.scores.keywords * 0.20 +\n    jobMatch.scores.projects * 0.15\n  ) * 10\n);\n\nreturn [\n  {\n    json: {\n      candidate_name: aiOutput.candidate_name,\n\n      overall_score: overallScore,\n\n      ats_score: atsScore,\n\n      score_breakdown: {\n        summary: resumeScores.summary,\n        experience: resumeScores.experience,\n        skills: resumeScores.skills,\n        projects: resumeScores.projects,\n        education: resumeScores.education,\n        formatting: resumeScores.formatting,\n        ats: resumeScores.ats\n      },\n\n      skills: aiOutput.skills,\n\n      strengths: aiOutput.strengths,\n\n      weaknesses: aiOutput.weaknesses,\n\n      recommendations: aiOutput.recommendations,\n\n      job_match: {\n        match_score: jobMatchScore,\n      \n        score_breakdown: {\n          skills: jobMatch.scores.skills,\n          experience: jobMatch.scores.experience,\n          keywords: jobMatch.scores.keywords,\n          projects: jobMatch.scores.projects\n        },\n      \n        required_skills: jobMatch.required_skills,\n      \n        preferred_skills: jobMatch.preferred_skills,\n      \n        matched_skills: jobMatch.matched_skills,\n      \n        missing_required_skills: jobMatch.missing_required_skills,\n      \n        missing_preferred_skills: jobMatch.missing_preferred_skills,\n      \n        matched_keywords: jobMatch.matched_keywords,\n      \n        missing_keywords: jobMatch.missing_keywords,\n      \n        recommendations: jobMatch.recommendations\n      }\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1040,
+        0
+      ],
+      "id": "f0695031-2a1e-4c4c-8a76-3b974bdb3cf9",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b5d54bea-7f22-450a-8e57-99d1d9e67018",
+              "name": "job_description",
+              "value": "={{ $('Webhook').item.json.body.job_description }}",
+              "type": "string"
+            },
+            {
+              "id": "43628e5d-393e-498c-8c4e-9f437a64440e",
+              "name": "text",
+              "value": "={{ $json.text }}",
+              "type": "string"
+            },
+            {
+              "id": "ed3c3db9-171c-47bc-9d74-fb61849fb4ec",
+              "name": "has_job_description",
+              "value": "={{ !!$('Webhook').item.json.body.job_description }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        448,
+        0
+      ],
+      "id": "610957b4-3af3-408c-86e1-d8c3ae90cfb6",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $json;\n\nconst technicalSkills = data.skills.technical\n  .map(skill => `<span class=\"tag\">${skill}</span>`)\n  .join(\"\");\n\nconst softSkills = data.skills.soft\n  .map(skill => `<span class=\"tag\">${skill}</span>`)\n  .join(\"\");\n\nconst strengths = data.strengths\n  .map(item => `<li>${item}</li>`)\n  .join(\"\");\n\nconst weaknesses = data.weaknesses\n  .map(item => `<li>${item}</li>`)\n  .join(\"\");\n\nconst recommendations = data.recommendations\n  .map(item => `<li>${item}</li>`)\n  .join(\"\");\n\nconst requiredSkills = data.job_match.required_skills\n  .map(skill => `<span class=\"tag\">${skill}</span>`)\n  .join(\"\");\n\nconst preferredSkills = data.job_match.preferred_skills\n  .map(skill => `<span class=\"tag\">${skill}</span>`)\n  .join(\"\");\n\nconst missingRequiredSkills = data.job_match.missing_required_skills\n  .map(skill => `<span class=\"tag missing\">${skill}</span>`)\n  .join(\"\");\n\nconst missingPreferredSkills = data.job_match.missing_preferred_skills\n  .map(skill => `<span class=\"tag missing\">${skill}</span>`)\n  .join(\"\");\n\nconst matchedSkills = data.job_match.matched_skills\n  .map(skill => `<span class=\"tag matched\">${skill}</span>`)\n  .join(\"\");\n\nconst matchedKeywords = data.job_match.matched_keywords\n  .map(keyword => `<span class=\"tag matched\">${keyword}</span>`)\n  .join(\"\");\n\nconst missingKeywords = data.job_match.missing_keywords\n  .map(keyword => `<span class=\"tag missing\">${keyword}</span>`)\n  .join(\"\");\n\nconst jobRecommendations = data.job_match.recommendations\n  .map(item => `<li>${item}</li>`)\n  .join(\"\");\n\nconst html = `\n<!DOCTYPE html>\n<html>\n<head>\n<meta charset=\"UTF-8\">\n\n<title>AI Resume Analysis - ${data.candidate_name}</title>\n\n<style>\n\nbody {\n  font-family: Arial, sans-serif;\n  background: #f4f6f8;\n  margin: 0;\n  padding: 40px;\n  color: #222;\n}\n\n.container {\n  max-width: 1000px;\n  margin: auto;\n  background: white;\n  padding: 40px;\n  border-radius: 12px;\n}\n\nh1 {\n  margin-bottom: 5px;\n}\n\nh2 {\n  margin-top: 35px;\n  border-bottom: 1px solid #ddd;\n  padding-bottom: 8px;\n}\n\n.subtitle {\n  color: #666;\n}\n\n.scores {\n  display: flex;\n  gap: 20px;\n  margin: 30px 0;\n}\n\n.score-card {\n  flex: 1;\n  padding: 20px;\n  background: #f5f7fa;\n  border-radius: 10px;\n  text-align: center;\n}\n\n.score {\n  font-size: 36px;\n  font-weight: bold;\n}\n\n.tags {\n  margin-top: 10px;\n}\n\n.tag {\n  display: inline-block;\n  padding: 6px 10px;\n  margin: 4px;\n  border-radius: 6px;\n  background: #e9eef5;\n  font-size: 14px;\n}\n\n.matched {\n  background: #dff5e3;\n}\n\n.missing {\n  background: #fde2e2;\n}\n\nli {\n  margin-bottom: 8px;\n}\n\ntable {\n  width: 100%;\n  border-collapse: collapse;\n}\n\ntd, th {\n  padding: 10px;\n  border-bottom: 1px solid #ddd;\n  text-align: left;\n}\n\n</style>\n\n</head>\n\n<body>\n\n<div class=\"container\">\n\n<h1>AI Resume Analysis</h1>\n\n<div class=\"subtitle\">\nCandidate: ${data.candidate_name}\n</div>\n\n<div class=\"scores\">\n\n<div class=\"score-card\">\n<div>Overall Score</div>\n<div class=\"score\">${data.overall_score}/100</div>\n</div>\n\n<div class=\"score-card\">\n<div>ATS Score</div>\n<div class=\"score\">${data.ats_score}/100</div>\n</div>\n\n<div class=\"score-card\">\n<div>Job Match</div>\n<div class=\"score\">${data.job_match.match_score}/100</div>\n</div>\n\n</div>\n\n<h2>Score Breakdown</h2>\n\n<table>\n\n<tr>\n<th>Category</th>\n<th>Score</th>\n</tr>\n\n<tr>\n<td>Summary</td>\n<td>${data.score_breakdown.summary}/10</td>\n</tr>\n\n<tr>\n<td>Experience</td>\n<td>${data.score_breakdown.experience}/10</td>\n</tr>\n\n<tr>\n<td>Skills</td>\n<td>${data.score_breakdown.skills}/10</td>\n</tr>\n\n<tr>\n<td>Projects</td>\n<td>${data.score_breakdown.projects}/10</td>\n</tr>\n\n<tr>\n<td>Education</td>\n<td>${data.score_breakdown.education}/10</td>\n</tr>\n\n<tr>\n<td>Formatting</td>\n<td>${data.score_breakdown.formatting}/10</td>\n</tr>\n\n<tr>\n<td>ATS</td>\n<td>${data.score_breakdown.ats}/10</td>\n</tr>\n\n</table>\n\n<h2>Technical Skills</h2>\n\n<div class=\"tags\">\n${technicalSkills}\n</div>\n\n<h2>Soft Skills</h2>\n\n<div class=\"tags\">\n${softSkills}\n</div>\n\n<h2>Strengths</h2>\n\n<ul>\n${strengths}\n</ul>\n\n<h2>Areas for Improvement</h2>\n\n<ul>\n${weaknesses}\n</ul>\n\n<h2>Recommendations</h2>\n\n<ul>\n${recommendations}\n</ul>\n\n<h2>Job Match Analysis</h2>\n\n<h3>Match Score: ${data.job_match.match_score}/100</h3>\n\n<h3>Required Skills</h3>\n\n<div class=\"tags\">\n${requiredSkills || \"None identified\"}\n</div>\n\n<h3>Preferred Skills</h3>\n\n<div class=\"tags\">\n${preferredSkills || \"None identified\"}\n</div>\n\n<h3>Matched Skills</h3>\n\n<div class=\"tags\">\n${matchedSkills || \"None\"}\n</div>\n\n<h3>Missing Required Skills</h3>\n\n<div class=\"tags\">\n${missingRequiredSkills || \"None\"}\n</div>\n\n<h3>Missing Preferred Skills</h3>\n\n<div class=\"tags\">\n${missingPreferredSkills || \"None\"}\n</div>\n\n<h3>Matched Keywords</h3>\n\n<div class=\"tags\">\n${matchedKeywords || \"None\"}\n</div>\n\n<h3>Missing Keywords</h3>\n\n<div class=\"tags\">\n${missingKeywords || \"None\"}\n</div>\n\n<h3>Job-Specific Recommendations</h3>\n\n<ul>\n${jobRecommendations}\n</ul>\n\n</div>\n\n</body>\n</html>\n`;\n\nreturn [\n  {\n    json: {\n      ...data,\n      report_html: html\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1264,
+        0
+      ],
+      "id": "7068c63c-8c35-41c3-aa99-85b75bb6bf2c",
+      "name": "Generate Report"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1488,
+        0
+      ],
+      "id": "dd4badf3-d536-40a3-a57c-7772d74af057",
+      "name": "Respond to Webhook"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Generate Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Report": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "8f229690-59aa-44de-b563-6a0ba8ba3cc6",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "e79adcab2e116925726eb450cb78615eb1806618f7df54f12660c42fea6962e2"
+  },
+  "nodeGroups": [],
+  "id": "lmR0d2eL0KB0R6TK",
+  "tags": []
+}
