@@ -1,0 +1,12 @@
+[
+  {
+    "id": 4,
+    "category": "Quality Assurance (QA)",
+    "experience_level": "Intern",
+    "required_skills": "Manual testing, API testing, SQL",
+    "preferred_skills": "Postman, Selenium, Jira, Git",
+    "application_notes": "DEF Solutions is seeking a QA Intern to perform manual and API testing; the role requires SQL knowledge and prefers candidates with experience using Postman and Selenium, with familiarity with Jira and Git considered a plus.",
+    "processing_status": "Processed",
+    "ai_recommendations": "Tailor your resume to emphasize hands-on manual testing and API testing experience and list specific SQL tasks or queries you have performed. | Include concrete examples or short project descriptions showing API tests (preferably with Postman) and any test automation work done with Selenium. | Mention familiarity with Jira and Git on your resume and be prepared to describe how you used them in collaboration or issue tracking. | Prepare a brief portfolio or set of examples (test cases, API request/response samples, SQL queries) to share during interviews. | Be ready to demonstrate basic SQL queries and to walk through creating or running API tests in Postman; if you have Selenium examples, be prepared to explain the test setup and results."
+  }
+]

@@ -5,6 +5,7 @@ A collection of reusable n8n automation projects and example workflows.
 ## Contents
 
 - **ai-resume-analyzer** — an n8n workflow that analyzes resumes using AI. See [ai-resume-analyzer/README.md](ai-resume-analyzer/README.md) for full details.
+- **job-application-tracker** — an n8n workflow that tracks and analyzes job applications using Google Sheets and OpenAI. See [job-application-tracker/README.md](job-application-tracker/README.md) for full details.
 
 ## Quickstart
 
@@ -34,6 +35,9 @@ Example output
 - ai-resume-analyzer
 	- Location: [ai-resume-analyzer](ai-resume-analyzer)
 	- Purpose: Demonstrates using AI to parse and score resumes inside an n8n workflow. Includes example screenshots and a sample output JSON.
+- job-application-tracker
+	- Location: [job-application-tracker](job-application-tracker)
+	- Purpose: Tracks job applications with Google Sheets, analyzes job descriptions with OpenAI, and writes structured recommendations back to the spreadsheet.
 
 ## Contributing
 

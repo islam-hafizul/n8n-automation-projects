@@ -1,0 +1,391 @@
+{
+  "name": "Job Application Tracker",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "documentId": {
+          "__rl": true,
+          "value": "",
+          "mode": "list",
+          "cachedResultName": "Job Applications",
+          "cachedResultUrl": ""
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Application",
+          "cachedResultUrl": ""
+        },
+        "event": "rowAdded",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "1f842144-b32b-4105-a2d2-db6a889d4d05",
+      "name": "Google Sheets Trigger",
+      "credentials": {
+        "googleSheetsTriggerOAuth2Api": {
+          "id": "",
+          "name": ""
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const allowedStatuses = [\n  'Applied',\n  'Interview',\n  'Technical Test',\n  'Offer',\n  'Rejected',\n  'Withdrawn'\n];\n\nconst allowedPriorities = [\n  'Low',\n  'Medium',\n  'High'\n];\n\nreturn items\n  .filter(item => {\n    const processingStatus =\n      String(item.json.processing_status || '')\n        .trim()\n        .toLowerCase();\n\n    return processingStatus === 'new';\n  })\n  .map(item => {\n    const data = item.json;\n\n    const company = String(data.company || '').trim();\n    const position = String(data.position || '').trim();\n    const jobDescription =\n      String(data.job_description || '').trim();\n\n    if (!company) {\n      throw new Error(\n        `Missing company name for application ID ${data.id}`\n      );\n    }\n\n    if (!position) {\n      throw new Error(\n        `Missing position for application ID ${data.id}`\n      );\n    }\n\n    if (!jobDescription) {\n      throw new Error(\n        `Missing job description for application ID ${data.id}`\n      );\n    }\n\n    const status = allowedStatuses.includes(data.status)\n      ? data.status\n      : 'Applied';\n\n    const priority = allowedPriorities.includes(data.priority)\n      ? data.priority\n      : 'Medium';\n\n    return {\n      json: {\n        id: Number(data.id),\n        date_applied: data.date_applied || '',\n\n        company,\n        position,\n        job_description: jobDescription,\n        job_url: String(data.job_url || '').trim(),\n\n        status,\n        priority,\n\n        current_category:\n          String(data.category || '').trim(),\n\n        current_experience_level:\n          String(data.experience_level || '').trim(),\n\n        current_required_skills:\n          String(data.required_skills || '').trim(),\n\n        current_preferred_skills:\n          String(data.preferred_skills || '').trim(),\n\n        current_application_notes:\n          String(data.application_notes || '').trim(),\n\n        current_ai_recommendations:\n          String(data.ai_recommendations || '').trim(),\n\n        follow_up_date:\n          data.follow_up_date || '',\n\n        processing_status: 'New'\n      }\n    };\n  });"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        224,
+        0
+      ],
+      "id": "7da362ab-ffe2-48c5-83de-a428e3d56adf",
+      "name": "Data Normalization"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-5-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-5-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "=You are a job application assistant.\n\nAnalyze the following job posting and extract structured information.\n\nCompany:\n{{ $json.company }}\n\nPosition:\n{{ $json.position }}\n\nJob Description:\n{{ $json.job_description }}\n\nRules:\n\n1. Identify the job category.\n2. Identify the expected experience level.\n3. Extract explicitly mentioned required skills.\n4. Extract explicitly mentioned preferred or nice-to-have skills.\n5. Write a concise summary of the role.\n6. Provide practical recommendations for applying to this position.\n\nDo not invent skills, requirements, qualifications, or technologies that are not supported by the job description.\n\nFor skills:\n- Only include a skill if the job description explicitly mentions it.\n- Do not infer equivalent technologies.\n- Keep required and preferred skills separate.\n\nReturn only the requested structured information."
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {
+          "textFormat": {
+            "textOptions": {
+              "type": "json_schema",
+              "schema": "{\n  \"type\": \"object\",\n  \"additionalProperties\": false,\n  \"properties\": {\n    \"category\": {\n      \"type\": \"string\"\n    },\n    \"experience_level\": {\n      \"type\": \"string\"\n    },\n    \"required_skills\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"string\"\n      }\n    },\n    \"preferred_skills\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"string\"\n      }\n    },\n    \"summary\": {\n      \"type\": \"string\"\n    },\n    \"recommendations\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"string\"\n      }\n    }\n  },\n  \"required\": [\n    \"category\",\n    \"experience_level\",\n    \"required_skills\",\n    \"preferred_skills\",\n    \"summary\",\n    \"recommendations\"\n  ]\n}"
+            }
+          }
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        448,
+        0
+      ],
+      "id": "6a5bedd5-fbc4-49e7-b16a-09079159fb9b",
+      "name": "Message a model",
+      "credentials": {
+        "openAiApi": {
+          "id": "",
+          "name": ""
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return items.map(item => {\n  const data = item.json;\n\n  const result = data.output?.[0]?.content?.[0]?.text;\n\n  if (!result) {\n    throw new Error('OpenAI returned no analysis result.');\n  }\n\n  return {\n    json: {\n      id: $('Data Normalization').first().json.id,\n\n      category: result.category || '',\n      experience_level: result.experience_level || '',\n\n      required_skills:\n        Array.isArray(result.required_skills)\n          ? result.required_skills.join(', ')\n          : '',\n\n      preferred_skills:\n        Array.isArray(result.preferred_skills)\n          ? result.preferred_skills.join(', ')\n          : '',\n\n      application_notes: result.summary || '',\n\n      ai_recommendations:\n        Array.isArray(result.recommendations)\n          ? result.recommendations.join(' | ')\n          : '',\n\n      processing_status: 'Processed'\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        816,
+        0
+      ],
+      "id": "2ad0d335-28de-41f9-ab91-32c2dd319e8f",
+      "name": "AI Data Cleaning"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "",
+          "mode": "list",
+          "cachedResultName": "Job Applications",
+          "cachedResultUrl": ""
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Application",
+          "cachedResultUrl": ""
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id": "={{ $json.id }}",
+            "category": "={{ $json.category }}",
+            "experience_level": "={{ $json.experience_level }}",
+            "required_skills": "={{ $json.required_skills }}",
+            "preferred_skills": "={{ $json.preferred_skills }}",
+            "application_notes": "={{ $json.application_notes }}",
+            "processing_status": "={{ $json.processing_status }}",
+            "ai_recommendations": "={{ $json.ai_recommendations }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "date_applied",
+              "displayName": "date_applied",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "company",
+              "displayName": "company",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "position",
+              "displayName": "position",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "job_description",
+              "displayName": "job_description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "job_url",
+              "displayName": "job_url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "priority",
+              "displayName": "priority",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "category",
+              "displayName": "category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "experience_level",
+              "displayName": "experience_level",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "required_skills",
+              "displayName": "required_skills",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "preferred_skills",
+              "displayName": "preferred_skills",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "application_notes",
+              "displayName": "application_notes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ai_recommendations",
+              "displayName": "ai_recommendations",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "follow_up_date",
+              "displayName": "follow_up_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "processing_status",
+              "displayName": "processing_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1040,
+        0
+      ],
+      "id": "7a0acbbe-80f0-4ab4-8491-e0a967ae98d5",
+      "name": "Update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "",
+          "name": ""
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Google Sheets Trigger": {
+      "main": [
+        [
+          {
+            "node": "Data Normalization",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Data Normalization": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "AI Data Cleaning",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Data Cleaning": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "2b53d800-5bc7-44d2-9eb1-f9ca56b74136",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "e79adcab2e116925726eb450cb78615eb1806618f7df54f12660c42fea6962e2"
+  },
+  "nodeGroups": [],
+  "id": "ta7BQNRGa5gNNH3E",
+  "tags": []
+}
