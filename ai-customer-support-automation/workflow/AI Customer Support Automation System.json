@@ -1,0 +1,575 @@
+{
+  "name": "AI Customer Support Automation System",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "customer-support",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        -80
+      ],
+      "id": "27f8cdd5-9aaa-40c3-8f96-5fea11c06693",
+      "name": "Webhook",
+      "webhookId": "0b201b76-a0e2-43e0-a009-799c8e32b17d"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "bc41a104-74aa-41b9-a1ff-5d371c16f121",
+              "name": "customer_name",
+              "value": "={{ $json.body.customer_name }}",
+              "type": "string"
+            },
+            {
+              "id": "8b1c6029-1c64-4184-90f0-1e0c9a48844a",
+              "name": "customer_email",
+              "value": "={{ $json.body.customer_email }}",
+              "type": "string"
+            },
+            {
+              "id": "8e91d69c-8f5b-4111-8ba1-6656681e1af6",
+              "name": "subject",
+              "value": "={{ $json.body.subject }}",
+              "type": "string"
+            },
+            {
+              "id": "c0608b27-d7d0-42d4-a0ef-725644349e82",
+              "name": "message",
+              "value": "={{ $json.body.message }}",
+              "type": "string"
+            },
+            {
+              "id": "d37cd38c-c19f-470d-b8f4-126455feb942",
+              "name": "received_at",
+              "value": "={{ $now }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        224,
+        -80
+      ],
+      "id": "2e2666f4-23af-41f6-b5ff-fe3fe4d7354e",
+      "name": "Normalize Request"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-5-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-5-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "=You are an AI customer support ticket classifier.\n\nYour job is to analyze incoming customer support requests and classify them accurately.\n\nYou must return ONLY valid JSON matching the required schema.\n\nDo not write a customer-facing response.\nDo not add explanations outside the JSON.\n\nCustomer Name: {{$json.customer_name}}\nCustomer Email: {{$json.customer_email}}\n\nSubject: {{$json.subject}}\n\nMessage:\n{{$json.message}}\n\nClassify the ticket using the following fields:\n\ncategory:\nOne of:\n- billing\n- account\n- subscription\n- technical\n- delivery\n- security\n- general\n- other\n\nintent:\nChoose exactly ONE intent from the following list:\n\nBilling:\n- duplicate_charge\n- refund_request\n- payment_failed\n\nAccount:\n- password_reset\n- account_locked\n- account_access\n\nSubscription:\n- cancel_subscription\n- upgrade_subscription\n\nTechnical:\n- login_problem\n- service_error\n\nSecurity:\n- account_compromise\n- suspicious_activity\n\nGeneral:\n- general_question\n- other\n\nDo not create a new intent.\nDo not modify the spelling of an intent.\nReturn the exact intent value from the list.\nIf none of the listed intents accurately matches the request, use:\n\"other\"\n\nurgency:\nOne of:\n- low\n- medium\n- high\n- critical\n\ncomplexity:\nOne of:\n- simple\n- moderate\n- complex\n\nsentiment:\nOne of:\n- positive\n- neutral\n- frustrated\n- angry\n\nconfidence:\nA number between 0 and 1 representing your confidence in the classification.\n\naction:\nOne of:\n- respond\n- escalate\n\nreason:\nA short explanation for the classification.\n\nReturn exactly this JSON structure:\n\n{\n  \"category\": \"...\",\n  \"intent\": \"...\",\n  \"urgency\": \"...\",\n  \"complexity\": \"...\",\n  \"sentiment\": \"...\",\n  \"confidence\": 0.0,\n  \"action\": \"...\",\n  \"reason\": \"...\"\n}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {
+          "textFormat": {
+            "textOptions": {
+              "type": "json_object"
+            }
+          }
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        448,
+        -80
+      ],
+      "id": "e0becc6c-f826-463e-88da-26a33d7f0b78",
+      "name": "Ticket Classification",
+      "credentials": {
+        "openAiApi": {
+          "id": "your-credential-id",
+          "name": "your_credential-name"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.final_action }}",
+                    "rightValue": "respond",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "ba2ff2eb-2242-46a3-97d4-6b812007ce89"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "respond"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "1f380527-f20b-4a25-b7e1-c8b8e007a03f",
+                    "leftValue": "={{ $json.final_action }}",
+                    "rightValue": "escalate",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "escalate"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        1024,
+        -80
+      ],
+      "id": "cede32e0-dd83-47df-82a7-8c055b529083",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the OpenAI response\nconst aiResponse = $json.output?.[0]?.content?.[0]?.text;\n\n// Make sure the AI returned something\nif (!aiResponse) {\n  throw new Error(\"OpenAI did not return a classification.\");\n}\n\n// If the response is a string, parse it.\n// If structured output already returned an object, use it directly.\nlet classification;\n\nif (typeof aiResponse === \"string\") {\n  try {\n    classification = JSON.parse(aiResponse);\n  } catch (error) {\n    throw new Error(\"Failed to parse OpenAI classification as JSON.\");\n  }\n} else {\n  classification = aiResponse;\n}\n\n// Extract and normalize the classification\nconst category = String(classification.category || \"other\").toLowerCase().trim();\n\nconst intent = String(classification.intent || \"unknown\").trim();\n\nconst urgency = String(classification.urgency || \"medium\").toLowerCase().trim();\n\nconst complexity = String(classification.complexity || \"moderate\").toLowerCase().trim();\n\nconst sentiment = String(classification.sentiment || \"neutral\").toLowerCase().trim();\n\nconst confidence = Number(classification.confidence ?? 0);\n\nconst aiAction = String(classification.action || \"escalate\").toLowerCase().trim();\n\nconst reason = String(classification.reason || \"\").trim();\n\n\n// Business rules for escalation\nconst shouldEscalate =\n  aiAction === \"escalate\" ||\n  urgency === \"critical\" ||\n  complexity === \"complex\" ||\n  confidence < 0.75 ||\n  category === \"security\";\n\n\n// Determine final action\nconst finalAction = shouldEscalate ? \"escalate\" : \"respond\";\n\n\n// Return clean data\nreturn {\n  json: {\n    category,\n    intent,\n    urgency,\n    complexity,\n    sentiment,\n    confidence,\n    ai_action: aiAction,\n    reason,\n    final_action: finalAction\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        800,
+        -80
+      ],
+      "id": "9525efb5-f264-4404-961a-1d5b00aafdd1",
+      "name": "Clean & Decide"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "fwqwGJbxOTfnCBjC",
+          "mode": "list",
+          "cachedResultName": "customer_support_faq",
+          "cachedResultUrl": "/projects/MBhT4YAsDbED6Ol0/datatables/fwqwGJbxOTfnCBjC"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "category",
+              "keyValue": "={{ $('Clean & Decide').item.json.category }}"
+            },
+            {
+              "keyName": "intent",
+              "keyValue": "={{ $('Clean & Decide').item.json.intent }}"
+            },
+            {
+              "keyName": "active",
+              "keyValue": "TRUE"
+            }
+          ]
+        },
+        "returnAll": true
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1248,
+        -160
+      ],
+      "id": "315edb31-2671-4d5e-9a5b-22036504c268",
+      "name": "Query Support",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-5-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-5-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "=Write a helpful, concise, and professional response to the customer.\n\nIMPORTANT:\nDo not claim that any action has already been performed.\n\nDo not say that a refund was initiated, an account was changed,\na transaction was verified, or any other action was completed unless\nthe input explicitly confirms that the action has already happened.\n\nDescribe available procedures or next steps instead.\n\nCustomer Name:\n{{ $('Normalize Request').item.json.customer_name }}\n\nCustomer Email:\n{{ $('Normalize Request').item.json.customer_email }}\n\nSubject:\n{{ $('Normalize Request').item.json.subject }}\n\nCustomer Message:\n{{ $('Normalize Request').item.json.message }}\n\nCategory:\n{{ $('Clean & Decide').item.json.category }}\n\nIntent:\n{{ $('Clean & Decide').item.json.intent }}\n\nSupport Knowledge:\n\nTitle:\n{{ $json.title }}\n\nInformation:\n{{ $json.content }}\n\nWrite a helpful, concise, and professional response to the customer.\n\nUse ONLY the provided Support Knowledge.\n\nDo not invent company policies, refund eligibility, prices, guarantees,\ntimelines, technical capabilities, or actions that are not supported\nby the provided information.\n\nIf the provided Support Knowledge does not contain enough information\nto answer the customer's question, say that the issue requires\nfurther assistance instead of making up an answer.\n\nDo not mention AI, automation, internal workflows, classification,\nconfidence scores, or the knowledge base.\n\nReturn only the customer-facing response.\n"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        1920,
+        -256
+      ],
+      "id": "79ef856d-4518-4450-8a1d-e7cd098bfb5d",
+      "name": "Message a model",
+      "credentials": {
+        "openAiApi": {
+          "id": "your-credential-id",
+          "name": "your_credential-name"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const response = $input.first().json.output[0].content[0].text;\n\nif (!response) {\n  throw new Error(\"OpenAI did not return a customer response.\");\n}\n\nreturn {\n  json: {\n    customer_name: $('Normalize Request').item.json.customer_name,\n    customer_email: $('Normalize Request').item.json.customer_email,\n    subject: $('Normalize Request').item.json.subject,\n    category: $('Clean & Decide').item.json.category,\n    intent: $('Clean & Decide').item.json.intent,\n    response: response.trim()\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2272,
+        -256
+      ],
+      "id": "1465a2d0-06b3-49a9-bdea-9dade6128a67",
+      "name": "Clean Response"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "e1991fdd-d055-4f2c-b93d-fbf96167fb27",
+              "leftValue": "={{ $json.content }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1696,
+        -160
+      ],
+      "id": "a580edc6-5463-4db2-bb34-abeff7a89c8c",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "team": "90182959946",
+        "space": "901812405529",
+        "folderless": true,
+        "list": "901820310589",
+        "name": "=🚨 [{{ $('Clean & Decide').item.json.urgency.toUpperCase() }}] {{ $('Clean & Decide').item.json.category }} - {{ $('Normalize Request').item.json.subject }}",
+        "additionalFields": {
+          "priority": "={{ $json.clickup_priority }}"
+        }
+      },
+      "type": "n8n-nodes-base.clickUp",
+      "typeVersion": 1,
+      "position": [
+        2496,
+        16
+      ],
+      "id": "9c012cea-dcf0-4a04-bf61-b0934654d724",
+      "name": "Create Support task",
+      "credentials": {
+        "clickUpOAuth2Api": {
+          "id": "your-credential-id",
+          "name": "ClickUp account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const urgency = $('Clean & Decide').item.json.urgency;\n\nconst priorityMap = {\n  critical: 1,\n  high: 2,\n  medium: 3,\n  low: 4\n};\n\nlet escalationReason = $('Clean & Decide').item.json.reason;\n\nif ($('Check FAQ').isExecuted) {\n  const faqFound = $('Check FAQ').item.json.faq_found;\n\n  if (faqFound === false) {\n    escalationReason = \"No matching knowledge base article found\";\n  }\n}\n\nreturn {\n  json: {\n    clickup_priority: priorityMap[urgency] || 3,\n    escalation_reason: escalationReason\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2272,
+        16
+      ],
+      "id": "e2840dc2-b157-4052-a4b4-a2ac62c04866",
+      "name": "Prepare ClickUp Task"
+    },
+    {
+      "parameters": {
+        "jsCode": "const content = $json.content;\n\nconst faqFound =\n  typeof content === \"string\" &&\n  content.trim().length > 0;\n\nreturn {\n  json: {\n    ...$json,\n    faq_found: faqFound\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1472,
+        -160
+      ],
+      "id": "b0c2f31d-cc8a-4a4a-b256-3d53c838b97d",
+      "name": "Check FAQ"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ {\n  status: \"success\",\n  action: \"respond\",\n  customer_email: $json.customer_email,\n  category: $json.category,\n  intent: $json.intent,\n  response: $json.response\n} }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        2496,
+        -256
+      ],
+      "id": "90973b10-4ab9-48ff-bf63-783e95817378",
+      "name": "Return AI Response"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ {\n  \"status\": \"success\",\n  \"action\": \"escalate\",\n  \"escalation_reason\": $('Prepare ClickUp Task').item.json.escalation_reason,\n  \"message\": \"Your request has been forwarded to our support team for review.\",\n  \"customer_email\": $('Normalize Request').item.json.customer_email,\n  \"category\": $('Clean & Decide').item.json.category,\n  \"intent\": $('Clean & Decide').item.json.intent,\n  \"urgency\": $('Clean & Decide').item.json.urgency\n} }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        2720,
+        16
+      ],
+      "id": "48897b84-fd8d-4959-8428-68377fcfc0be",
+      "name": "Return Escalate Response"
+    },
+    {
+      "parameters": {
+        "jsCode": "return {\n  json: {\n    escalation_reason: \"No matching knowledge base article found\"\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1984,
+        -64
+      ],
+      "id": "428c7395-2df6-49ce-a6eb-e33322e035a2",
+      "name": "Mark FAQ Escalation"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Normalize Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Request": {
+      "main": [
+        [
+          {
+            "node": "Ticket Classification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ticket Classification": {
+      "main": [
+        [
+          {
+            "node": "Clean & Decide",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clean & Decide": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Query Support",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Prepare ClickUp Task",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Query Support": {
+      "main": [
+        [
+          {
+            "node": "Check FAQ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Clean Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Mark FAQ Escalation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare ClickUp Task": {
+      "main": [
+        [
+          {
+            "node": "Create Support task",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check FAQ": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clean Response": {
+      "main": [
+        [
+          {
+            "node": "Return AI Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Support task": {
+      "main": [
+        [
+          {
+            "node": "Return Escalate Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark FAQ Escalation": {
+      "main": [
+        [
+          {
+            "node": "Prepare ClickUp Task",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "6f315d56-166c-4040-b43d-8562bbec3129",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "e79adcab2e116925726eb450cb78615eb1806618f7df54f12660c42fea6962e2"
+  },
+  "nodeGroups": [],
+  "id": "pjoYIjdjWjtKNWWp",
+  "tags": []
+}
