@@ -4,7 +4,9 @@ A collection of reusable n8n automation projects and example workflows.
 
 ## Contents
 
+- **ai-customer-support-automation** — an n8n workflow that automates customer support ticket classification, knowledge-base lookup, AI response generation, and ClickUp escalation. See [ai-customer-support-automation/README.md](ai-customer-support-automation/README.md) for full details.
 - **ai-resume-analyzer** — an n8n workflow that analyzes resumes using AI. See [ai-resume-analyzer/README.md](ai-resume-analyzer/README.md) for full details.
+- **gmail-assistant** — an n8n workflow that drafts and optionally sends Gmail messages through an AI-powered chat assistant. See [gmail-assistant/README.md](gmail-assistant/README.md) for full details.
 - **job-application-tracker** — an n8n workflow that tracks and analyzes job applications using Google Sheets and OpenAI. See [job-application-tracker/README.md](job-application-tracker/README.md) for full details.
 
 ## Quickstart
@@ -32,12 +34,30 @@ Example output
 
 ## Projects
 
-- ai-resume-analyzer
-	- Location: [ai-resume-analyzer](ai-resume-analyzer)
-	- Purpose: Demonstrates using AI to parse and score resumes inside an n8n workflow. Includes example screenshots and a sample output JSON.
-- job-application-tracker
-	- Location: [job-application-tracker](job-application-tracker)
-	- Purpose: Tracks job applications with Google Sheets, analyzes job descriptions with OpenAI, and writes structured recommendations back to the spreadsheet.
+### AI Customer Support Automation
+- Location: [ai-customer-support-automation](ai-customer-support-automation)
+- Purpose: Automates ticket classification, knowledge-base lookup, AI response generation, and ClickUp escalation for customer support.
+
+![AI Customer Support Automation](ai-customer-support-automation/screenshots/workflow.png)
+
+### AI Resume Analyzer
+- Location: [ai-resume-analyzer](ai-resume-analyzer)
+- Purpose: Demonstrates using AI to parse and score resumes inside an n8n workflow. Includes example screenshots and a sample output JSON.
+
+![AI Resume Analyzer](ai-resume-analyzer/screenshots/workflow.png)
+
+### Gmail Assistant
+- Location: [gmail-assistant](gmail-assistant)
+- Purpose: Provides a conversational email assistant that drafts and optionally sends Gmail messages through n8n.
+
+![Gmail Assistant](gmail-assistant/screenshots/workflow.png)
+
+### Job Application Tracker
+- Location: [job-application-tracker](job-application-tracker)
+- Purpose: Tracks job applications with Google Sheets, analyzes job descriptions with OpenAI, and writes structured recommendations back to the spreadsheet.
+
+![Job Application Tracker](job-application-tracker/screenshots/workflow.png)
+
 
 ## Contributing
 
