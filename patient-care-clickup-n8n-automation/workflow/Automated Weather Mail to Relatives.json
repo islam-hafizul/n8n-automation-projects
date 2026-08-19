@@ -1,0 +1,381 @@
+{
+  "name": "Automated Weather Mail to Relatives",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {}
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        -240
+      ],
+      "id": "ef8bedd2-658e-44f1-b8de-7c1b17f78433",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nreturn items.map(item => {\n  const task = item.json;\n  \n  const description = task.description || '';\n\n  // Extract the Latitude & Longitude custom field.\n  // const locationField = (task.custom_fields || []).find(\n  //   field => field.name.toLowerCase() === 'latitude & longtitude'\n  // );\n  // const location = locationField?.value || '';\n\n  const desc_location = description?.match(/Location:\\s*([^\\s,]+),\\s*([^\\s,]+)/i);\n  const location = desc_location || '';\n  \n  let latitude = null;\n  let longitude = null;\n  if (location) {\n    latitude = Number(location[1]);\n    longitude = Number(location[2]);\n  }\n\n  // Extract email from the description.\n  const emailMatch = task.description?.match(\n    /Email:\\s*([^\\s]+@[^\\s]+)/i\n  );\n  const email = emailMatch ? emailMatch[1] : null;\n\n  // Extract phone from the description.\n  const phoneMatch = description.match(\n    /Phone:\\s*([^\\n]+)/i\n  );\n  const phone = phoneMatch\n    ? phoneMatch[1].trim()\n    : null;\n\n  // Extract relative ID from the description.\n  const relativeIdMatch = description.match(\n    /Relative ID:\\s*([^\\n]+)/i\n  );\n  const relativeId = relativeIdMatch\n    ? relativeIdMatch[1].trim()\n    : null;\n  \n  // Extract related from the description.\n  const patientMatch = description.match(\n    /Patient:\\s*\\n?\\s*([^\\n]+)/i\n  );\n\n  const patientName = patientMatch\n    ? patientMatch[1].trim()\n    : null;\n  let patientId = null;\n  if (patientName) {\n    const idMatch = patientName.match(/^([A-Za-z0-9-]+)\\s*[—-]/);\n    if (idMatch) {\n      patientId = idMatch[1];\n    }\n  }\n  \n\n  return {\n    json: {\n      relative_task_id: task.id,\n      relative_name: task.name,\n      relative_id: relativeId,\n      status: task.status?.status || null,\n\n      created_at: task.date_created\n        ? new Date(Number(task.date_created)).toISOString()\n        : null,\n\n      due_at: task.due_date\n        ? new Date(Number(task.due_date)).toISOString()\n        : null,\n\n      email,\n      phone,\n\n      latitude,\n      longitude,\n\n      patient_id: patientId,\n      patient_name: patientName,\n\n      description,\n      task_url: task.url || null,\n\n      linked_tasks: task.linked_tasks || [],\n      list_id: task.list?.id || null,\n      list_name: task.list?.name || null,\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        -240
+      ],
+      "id": "afffb466-baa1-4542-94ed-ccefdd2d5cb7",
+      "name": "Normalize Relatives Data"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\n// DEMO DATE\n// We'll replace this with a dynamic date after the workflow is tested.\nconst today = '2026-08-16';\n\nfunction getDateOnly(isoString) {\n  if (!isoString) return null;\n\n  const date = new Date(isoString);\n\n  if (Number.isNaN(date.getTime())) {\n    return null;\n  }\n\n  return date.toISOString().slice(0, 10);\n}\n\nfunction addDays(dateString, days) {\n  const date = new Date(`${dateString}T00:00:00Z`);\n\n  if (Number.isNaN(date.getTime())) {\n    return null;\n  }\n\n  date.setUTCDate(date.getUTCDate() + days);\n\n  return date.toISOString().slice(0, 10);\n}\n\nfunction toClickUpTimestamp(dateString) {\n  // Use noon UTC to prevent ClickUp from displaying\n  // the previous calendar day because of timezone conversion.\n  const date = new Date(`${dateString}T12:00:00.000Z`);\n\n  if (Number.isNaN(date.getTime())) {\n    return null;\n  }\n\n  return date.getTime();\n}\n\nconst output = [];\n\nfor (const item of items) {\n  const data = item.json;\n\n  let reason = null;\n  let visitDate = null;\n\n  // --------------------------------\n  // NEW RELATIVE\n  // First visit = created date + 3 days\n  // --------------------------------\n  if (data.status === 'new listed') {\n\n    const createdDate = getDateOnly(data.created_at);\n\n    if (!createdDate) continue;\n\n    const firstVisitDate = addDays(createdDate, 3);\n\n    if (firstVisitDate === today) {\n      reason = 'FIRST_VISIT_DUE';\n      visitDate = firstVisitDate;\n    }\n  }\n\n  // --------------------------------\n  // ACTIVE RELATIVE\n  // Weekly visit = due date\n  // --------------------------------\n  else if (data.status === 'active') {\n\n    const dueDate = getDateOnly(data.due_at);\n\n    if (!dueDate) continue;\n\n    if (dueDate === today) {\n      reason = 'WEEKLY_VISIT_DUE';\n      visitDate = dueDate;\n    }\n  }\n\n  // Ignore archived / anything else\n  if (!reason) continue;\n\n  output.push({\n    json: {\n      ...data,\n      eligible: true,\n      reason,\n      today,\n      visit_date: visitDate,\n      visit_due_timestamp: toClickUpTimestamp(visitDate),\n    }\n  });\n}\n\nreturn output;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        672,
+        -240
+      ],
+      "id": "a9b7bd01-5bc4-4ac4-b323-01b880b49a27",
+      "name": "Check Visit Eligibility"
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "team": "90182973762",
+        "space": "901812489415",
+        "folder": "901816099547",
+        "list": "901820452688",
+        "name": "=Visit — {{$json.relative_name}} → {{$json.patient_name}}",
+        "additionalFields": {
+          "content": "=VISIT INFORMATION\n\nRelative: {{$json.relative_name}}\nRelative ID: {{$json.relative_id}}\n\nPatient: {{$json.patient_name}}\nPatient ID: {{$json.patient_id}}\n\nVisit Date: {{$json.visit_date}}\n\nRelative Email: {{$json.email}}\n\nLocation: {{$json.latitude}}, {{$json.longitude}}\n\nCreated by: Patient Care automation",
+          "dueDate": "={{$json.visit_due_timestamp}}",
+          "markdownContent": false,
+          "status": "scheduled"
+        }
+      },
+      "type": "n8n-nodes-base.clickUp",
+      "typeVersion": 1,
+      "position": [
+        896,
+        -240
+      ],
+      "id": "1d0d7511-d76f-486a-993e-9be422be42eb",
+      "name": "Create visit tasks",
+      "credentials": {
+        "clickUpOAuth2Api": {
+          "id": "QTiT5nz5sktCwYyG",
+          "name": "ClickUp account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "operation": "getAll",
+        "team": "90182973762",
+        "space": "901812489415",
+        "folder": "901816099547",
+        "list": "901820452625",
+        "filters": {}
+      },
+      "type": "n8n-nodes-base.clickUp",
+      "typeVersion": 1,
+      "position": [
+        224,
+        -240
+      ],
+      "id": "5b598f36-9a14-4800-ac7d-9166295e4fe8",
+      "name": "Get relatives tasks",
+      "credentials": {
+        "clickUpOAuth2Api": {
+          "id": "QTiT5nz5sktCwYyG",
+          "name": "ClickUp account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const weather = $json;\nconst source = $('Check Visit Eligibility').item.json;\n\nconst visitDate = source.visit_date;\n\n// Find the forecast entry for the visit date.\nconst index = weather.daily.time.indexOf(visitDate);\n\nif (index === -1) {\n  throw new Error(\n    `Weather forecast not found for ${visitDate} at ${source.relative_name}`\n  );\n}\n\nfunction cleanName(value) {\n  if (!value) return '';\n\n  // Example:\n  // \"R-0023 — Max Willson\" → \"Max Willson\"\n  // \"R-004 — Laura Thompson\" → \"Laura Thompson\"\n  return value\n    .replace(/^[A-Za-z0-9-]+\\s*[—-]\\s*/, '')\n    .trim();\n}\n\nconst relativeName = cleanName(source.relative_name);\nconst patientName = cleanName(source.patient_name);\n\nconst weatherCode = weather.daily.weather_code[index];\n\nreturn {\n  json: {\n    relative_task_id: source.relative_task_id,\n    relative_id: source.relative_id,\n    relative_name: relativeName,\n\n    patient_id: source.patient_id,\n    patient_name: patientName,\n\n    email: 'cooperangela223@gmail.com',\n\n    latitude: source.latitude,\n    longitude: source.longitude,\n\n    visit_date: source.visit_date,\n    reason: source.reason,\n\n    weather: {\n      weather_code: weatherCode,\n      max_temperature_f:\n        weather.daily.temperature_2m_max[index],\n\n      min_temperature_f:\n        weather.daily.temperature_2m_min[index],\n\n      precipitation_probability:\n        weather.daily.precipitation_probability_max[index],\n    }\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1344,
+        -240
+      ],
+      "id": "8c7ac115-eee0-4ab6-9751-e210963053d7",
+      "name": "Extract Visit Day Weather"
+    },
+    {
+      "parameters": {
+        "url": "https://api.open-meteo.com/v1/forecast",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "latitude",
+              "value": "={{ $('Check Visit Eligibility').item.json.latitude }}"
+            },
+            {
+              "name": "longitude",
+              "value": "={{ $('Check Visit Eligibility').item.json.longitude }}"
+            },
+            {
+              "name": "daily",
+              "value": "weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max"
+            },
+            {
+              "name": "temperature_unit",
+              "value": "fahrenheit"
+            },
+            {
+              "name": "forecast_days",
+              "value": "7"
+            },
+            {
+              "name": "timezone",
+              "value": "auto"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        1120,
+        -240
+      ],
+      "id": "dd43638c-8a52-4fe6-99db-8dece48ae348",
+      "name": "Get Weather Forecast"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const data = $json;\n\nfunction weatherDescription(code) {\n  const descriptions = {\n    0: 'Clear sky',\n    1: 'Mainly clear',\n    2: 'Partly cloudy',\n    3: 'Overcast',\n    45: 'Fog',\n    48: 'Depositing rime fog',\n    51: 'Light drizzle',\n    53: 'Moderate drizzle',\n    55: 'Dense drizzle',\n    61: 'Slight rain',\n    63: 'Moderate rain',\n    65: 'Heavy rain',\n    71: 'Slight snow',\n    73: 'Moderate snow',\n    75: 'Heavy snow',\n    80: 'Slight rain showers',\n    81: 'Moderate rain showers',\n    82: 'Violent rain showers',\n    95: 'Thunderstorm',\n    96: 'Thunderstorm with slight hail',\n    99: 'Thunderstorm with heavy hail',\n  };\n\n  return descriptions[code] || 'Weather conditions unavailable';\n}\n\nconst description = weatherDescription(\n  data.weather.weather_code\n);\n\nconst subject =\n  `Weather Forecast for Your Visit — ${data.visit_date}`;\n\nconst html = `\n<p>Hello ${data.relative_name},</p>\n\n<p>\nYou are scheduled to visit <strong>${data.patient_name}</strong>\non <strong>${data.visit_date}</strong>.\n</p>\n\n<p>Here is the current weather forecast for your location:</p>\n\n<table style=\"border-collapse: collapse;\">\n  <tr>\n    <td><strong>Conditions</strong></td>\n    <td>${description}</td>\n  </tr>\n  <tr>\n    <td><strong>High</strong></td>\n    <td>${data.weather.max_temperature_f}°F</td>\n  </tr>\n  <tr>\n    <td><strong>Low</strong></td>\n    <td>${data.weather.min_temperature_f}°F</td>\n  </tr>\n  <tr>\n    <td><strong>Precipitation Chance</strong></td>\n    <td>${data.weather.precipitation_probability}%</td>\n  </tr>\n</table>\n\n<p>\nPlease prepare accordingly for your visit.\n</p>\n\n<p>\nBest regards,<br>\n<strong>Patient Care</strong>\n</p>\n`;\n\nreturn {\n  json: {\n    ...data,\n    email_subject: subject,\n    email_html: html,\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1568,
+        -240
+      ],
+      "id": "0566bd34-b438-4db3-a368-9a8889b032ae",
+      "name": "Prepare Weather Email"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.email }}",
+        "subject": "={{ $json.email_subject }}",
+        "message": "={{ $json.email_html }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1792,
+        -240
+      ],
+      "id": "32d992d5-875e-4d0d-b07d-4eebffea41e0",
+      "name": "Send Email",
+      "webhookId": "08fa408f-0729-4901-9dff-d17a5a5973b1",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "Ca4QatjDrFzGrweO",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "operation": "update",
+        "id": "={{ $('Check Visit Eligibility').item.json.relative_task_id }}",
+        "updateFields": {
+          "status": "ACTIVE"
+        }
+      },
+      "type": "n8n-nodes-base.clickUp",
+      "typeVersion": 1,
+      "position": [
+        2176,
+        -400
+      ],
+      "id": "e0c02c10-6d9c-48e8-9d00-d7733c3b3818",
+      "name": "Update relative tasks status",
+      "credentials": {
+        "clickUpOAuth2Api": {
+          "id": "QTiT5nz5sktCwYyG",
+          "name": "ClickUp account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "8bf22408-5250-4ea9-932c-001662b7022e",
+              "leftValue": "={{ $('Prepare Weather Email').item.json.reason }}",
+              "rightValue": "FIRST_VISIT_DUE",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2016,
+        -240
+      ],
+      "id": "9c176034-b5f9-4312-993b-bf4cbab071a2",
+      "name": "If"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get relatives tasks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Relatives Data": {
+      "main": [
+        [
+          {
+            "node": "Check Visit Eligibility",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Visit Eligibility": {
+      "main": [
+        [
+          {
+            "node": "Create visit tasks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get relatives tasks": {
+      "main": [
+        [
+          {
+            "node": "Normalize Relatives Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create visit tasks": {
+      "main": [
+        [
+          {
+            "node": "Get Weather Forecast",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Weather Forecast": {
+      "main": [
+        [
+          {
+            "node": "Extract Visit Day Weather",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Visit Day Weather": {
+      "main": [
+        [
+          {
+            "node": "Prepare Weather Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Weather Email": {
+      "main": [
+        [
+          {
+            "node": "Send Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Email": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Update relative tasks status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "30b3add6-6538-4e15-bf05-7d8db638244b",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "2c24f8d17a4a3e0d320bca6de1938d898d0f89c35932a3e46bba9ed183fbd219"
+  },
+  "nodeGroups": [],
+  "id": "zl9Vz9OKHMXob4EJ",
+  "tags": []
+}
