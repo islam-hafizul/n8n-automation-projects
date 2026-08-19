@@ -1,4 +1,4 @@
-# n8n-automation-projects
+# AI-Workflow-Automation-Projects
 
 A collection of reusable n8n automation projects and example workflows.
 
