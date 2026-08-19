@@ -60,7 +60,7 @@ Example workflow: [patient-care-clickup-automation/workflow/relative-visit-weath
 - Location: [patient-care-clickup-automation](patient-care-clickup-automation)
 - Purpose: Demonstrates an end-to-end assisted-living operations system built with ClickUp and n8n. ClickUp manages daily care tasks, medication administration, sales CRM, relatives, and visits. n8n automates relative-visit processing, creates Visit tasks, retrieves visit-day weather from Open-Meteo using each relative's latitude/longitude, and sends personalized Gmail notifications.
 
-![Patient Care Automation Workflow](patient-care-clickup-automation/screenshots/workflow.png)
+![Patient Care Automation Workflow](patient-care-clickup-n8n-automation/screenshots/n8n/workflow.png)
 
 **Suggested project screenshots:**
 - ClickUp workspace / operations structure
